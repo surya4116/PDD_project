@@ -26,14 +26,30 @@ try {
     
     $centers = $stmt->fetchAll();
     
+    // Fetch all existing valid provider IDs to exclude orphan service centers of deleted providers
+    $validProviderIds = [];
+    try {
+        $cols = $pdo->query("SHOW COLUMNS FROM `providers`")->fetchAll(PDO::FETCH_COLUMN);
+        $provPk = in_array('provider_id', $cols) ? 'provider_id' : 'id';
+        $validProviderIds = $pdo->query("SELECT `$provPk` FROM providers")->fetchAll(PDO::FETCH_COLUMN);
+        $validProviderIds = array_map('intval', $validProviderIds);
+    } catch (Exception $e) {}
+
     $formatted = [];
     foreach ($centers as $c) {
+        $pId = isset($c['providerId']) ? (int)$c['providerId'] : (isset($c['adminId']) ? (int)$c['adminId'] : 0);
+        
+        // Skip centers if the provider has been deleted from providers table
+        if (!empty($validProviderIds) && !in_array($pId, $validProviderIds)) {
+            continue;
+        }
+
         $formatted[] = [
             "id" => (int)$c['center_id'],
             "name" => $c['center_name'],
             "categoryId" => (int)$c['categoryId'],
             "address" => $c['address'],
-            "providerId" => (int)$c['providerId'],
+            "providerId" => $pId,
             "isActive" => $c['status'] === 'Active'
         ];
     }
