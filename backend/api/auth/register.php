@@ -6,19 +6,18 @@ error_log("Step 3: Database Connected");
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!isset($data['name']) || !isset($data['phone']) || !isset($data['email']) || !isset($data['password'])) {
-    echo json_encode(["success" => false, "message" => "Missing fields"]);
+$fullname = trim($data['name'] ?? $data['fullname'] ?? '');
+$phone = trim($data['phone'] ?? '');
+$email = trim($data['email'] ?? '');
+$password = $data['password'] ?? '';
+
+if (empty($fullname) || empty($phone) || empty($password)) {
+    echo json_encode(["success" => false, "message" => "Name, Phone and Password cannot be empty"]);
     exit;
 }
 
-$fullname = trim($data['name']);
-$phone = trim($data['phone']);
-$email = trim($data['email']);
-$password = $data['password'];
-
-if (empty($fullname) || empty($phone) || empty($email) || empty($password)) {
-    echo json_encode(["success" => false, "message" => "Fields cannot be empty"]);
-    exit;
+if (empty($email)) {
+    $email = $phone . '@smartq.local';
 }
 
 error_log("Step 2: Validation Passed");
