@@ -22,7 +22,7 @@ const api = {
     loginProvider: (phone, password) =>
         api.request('/auth/provider_login.php', 'POST', { phone, password }),
     register: (fullname, phone, email, password) =>
-        api.request('/auth/register.php', 'POST', { fullname, phone, email, password }),
+        api.request('/auth/register.php', 'POST', { name: fullname, fullname, phone, email, password }),
 
     // ── Users
     getUser: (userId) => api.request(`/users/get_user.php?id=${userId}`),
