@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartQ – Skip the Queue</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="auth-root">
+  <!-- LEFT: Hero Panel -->
+  <div class="auth-hero">
+    <div class="hero-logo">Q</div>
+    <div class="hero-title">SmartQueue Pro</div>
+    <p class="hero-sub">Book services, skip the wait. Real-time queue management for everyone.</p>
+    <div class="hero-features">
+      <div class="hero-feat"><span class="fi">🎫</span><p>Instant token generation & queue tracking</p></div>
+      <div class="hero-feat"><span class="fi">📊</span><p>Live queue position & wait time updates</p></div>
+      <div class="hero-feat"><span class="fi">🏪</span><p>Manage services & appointments with ease</p></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Auth Forms -->
+  <div class="auth-panel">
+    <div class="auth-box">
+      <div class="auth-logo-sm">
+        <div class="lm">Q</div>
+        <span>SmartQ</span>
+      </div>
+
+      <!-- Role Tabs -->
+      <div class="auth-tab-row" id="authTabs">
+        <button class="auth-tab active" onclick="selectRole('user',this)">Customer</button>
+        <button class="auth-tab" onclick="selectRole('provider',this)">Service Provider</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <div id="formSignIn">
+        <h2 style="font-size:26px;font-weight:800;margin-bottom:6px;" id="signInTitle">Welcome back</h2>
+        <p style="color:var(--text-2);font-size:14px;margin-bottom:28px;">Sign in to your SmartQ account</p>
+
+        <div id="signInAlert" class="alert alert-error"></div>
+
+        <form onsubmit="handleSignIn(event)">
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="loginPhone" class="form-input" placeholder="Enter your phone number" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+            <button type="button" class="input-icon" onclick="togglePwd('loginPassword',this)">👁</button>
+          </div>
+          <div style="text-align:right;margin-bottom:24px;">
+            <button type="button" class="link" style="font-size:13px;" onclick="showForm('formForgot')">Forgot password?</button>
+          </div>
+          <button type="submit" class="btn btn-primary" id="signInBtn">Sign In</button>
+        </form>
+
+        <div class="divider"><span>or</span></div>
+        <p style="text-align:center;font-size:14px;color:var(--text-2);">
+          Don't have an account? <button class="link" onclick="showForm('formRegister')">Create account</button>
+        </p>
+      </div>
+
+      <!-- Register Form -->
+      <div id="formRegister" style="display:none;">
+        <h2 style="font-size:26px;font-weight:800;margin-bottom:6px;">Create account</h2>
+        <p style="color:var(--text-2);font-size:14px;margin-bottom:28px;" id="regSubtitle">Join SmartQ as a Customer</p>
+
+        <div id="registerAlert" class="alert alert-error"></div>
+
+        <form onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="regName" class="form-input" placeholder="Your full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="regPhone" class="form-input" placeholder="Phone number" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="regEmail" class="form-input" placeholder="Email (optional)">
+          </div>
+          <div id="providerRegFields" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Business / Shop Name</label>
+              <input type="text" id="regShopName" class="form-input" placeholder="e.g. City Clinic">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location / Address</label>
+              <input type="text" id="regLocation" class="form-input" placeholder="Full address">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="regPassword" class="form-input" placeholder="Create a password" required>
+            <button type="button" class="input-icon" onclick="togglePwd('regPassword',this)">👁</button>
+          </div>
+          <button type="submit" class="btn btn-primary" id="registerBtn">Create Account</button>
+        </form>
+
+        <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--text-2);">
+          Already have an account? <button class="link" onclick="showForm('formSignIn')">Sign in</button>
+        </p>
+      </div>
+
+      <!-- Forgot Password -->
+      <div id="formForgot" style="display:none;">
+        <h2 style="font-size:26px;font-weight:800;margin-bottom:6px;">Reset password</h2>
+        <p style="color:var(--text-2);font-size:14px;margin-bottom:28px;">Enter your phone number to receive an OTP</p>
+
+        <div id="forgotAlert" class="alert"></div>
+
+        <div id="forgotStep1">
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="forgotPhone" class="form-input" placeholder="Your registered phone">
+          </div>
+          <button class="btn btn-primary" onclick="sendOTP()">Send OTP</button>
+        </div>
+
+        <div id="forgotStep2" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">OTP Code</label>
+            <input type="text" id="otpCode" class="form-input" placeholder="Enter OTP">
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" id="newPassword" class="form-input" placeholder="New password">
+          </div>
+          <button class="btn btn-primary" onclick="resetPassword()">Reset Password</button>
+        </div>
+
+        <p style="text-align:center;margin-top:20px;font-size:14px;">
+          <button class="link" onclick="showForm('formSignIn')">← Back to sign in</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  // Handle logout parameter or clear previous sessions when opening login page directly
+  if (window.location.search.includes('logout=true')) {
+    session.clearAll();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  // Clear any existing session so the app always opens the login page first as requested
+  session.clearAll();
+
+  let selectedRole = 'user';
+
+  function selectRole(role, tabEl) {
+    selectedRole = role;
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    document.getElementById('signInTitle').textContent = role === 'user' ? 'Welcome back' : 'Provider Sign In';
+    document.getElementById('regSubtitle').textContent = role === 'user' ? 'Join SmartQ as a Customer' : 'Register your business on SmartQ';
+    document.getElementById('providerRegFields').style.display = role === 'provider' ? 'block' : 'none';
+    showForm('formSignIn');
+  }
+
+  function showForm(id) {
+    ['formSignIn','formRegister','formForgot'].forEach(f => document.getElementById(f).style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+  }
+
+  function togglePwd(id, btn) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  }
+
+  function showAlert(id, msg, type='error') {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `alert alert-${type} show`;
+  }
+
+  async function handleSignIn(e) {
+    e.preventDefault();
+    const phone = document.getElementById('loginPhone').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('signInBtn');
+    document.getElementById('signInAlert').classList.remove('show');
+    btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;"></div>';
+    btn.disabled = true;
+    try {
+      let res;
+      if (selectedRole === 'provider') {
+        res = await api.loginProvider(phone, password);
+        const providerData = res.provider || res.user;
+        if (res.success && providerData) { session.setProvider(providerData); window.location.href = 'provider_dashboard.html'; return; }
+      } else {
+        res = await api.login(phone, password);
+        if (res.success) { session.setUser(res.user); window.location.href = 'user_dashboard.html'; return; }
+      }
+      showAlert('signInAlert', res.message || 'Invalid phone or password');
+    } catch(e) { showAlert('signInAlert', 'Network error. Please try again.'); }
+    finally { btn.textContent = 'Sign In'; btn.disabled = false; }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const btn = document.getElementById('registerBtn');
+    document.getElementById('registerAlert').classList.remove('show');
+    btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;"></div>';
+    btn.disabled = true;
+    try {
+      let res;
+      if (selectedRole === 'provider') {
+        const shopName = document.getElementById('regShopName').value.trim();
+        const location = document.getElementById('regLocation').value.trim();
+        res = await api.request('/auth/register_provider.php','POST',{ name, phone, password, shopName, location, categoryId:1 });
+      } else {
+        res = await api.register(name, phone, email, password);
+      }
+      if (res.success) { showAlert('registerAlert','Account created! Please sign in.','success'); setTimeout(()=>showForm('formSignIn'),1800); }
+      else showAlert('registerAlert', res.message || 'Registration failed');
+    } catch(e) { showAlert('registerAlert','Network error.'); }
+    finally { btn.textContent = 'Create Account'; btn.disabled = false; }
+  }
+
+  async function sendOTP() {
+    const phone = document.getElementById('forgotPhone').value.trim();
+    if (!phone) return;
+    try {
+      const res = await api.request('/auth/send_otp.php','POST',{ phone });
+      if (res.success) { showAlert('forgotAlert','OTP sent!','success'); document.getElementById('forgotStep1').style.display='none'; document.getElementById('forgotStep2').style.display='block'; }
+      else showAlert('forgotAlert', res.message || 'Failed to send OTP');
+    } catch(e) { showAlert('forgotAlert','Network error.'); }
+  }
+
+  async function resetPassword() {
+    const phone = document.getElementById('forgotPhone').value.trim();
+    const otp = document.getElementById('otpCode').value.trim();
+    const newPwd = document.getElementById('newPassword').value;
+    try {
+      const res = await api.request('/auth/reset_password.php','POST',{ phone, otp, newPassword: newPwd });
+      if (res.success) { showAlert('forgotAlert','Password reset!','success'); setTimeout(()=>showForm('formSignIn'),1500); }
+      else showAlert('forgotAlert', res.message || 'Reset failed');
+    } catch(e) { showAlert('forgotAlert','Network error.'); }
+  }
+</script>
+</body>
+</html>
