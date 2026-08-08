@@ -3,22 +3,21 @@ require_once '../../config/database.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!isset($data['name']) || !isset($data['phone']) || !isset($data['email']) || !isset($data['password']) || !isset($data['shopName']) || !isset($data['categoryId']) || !isset($data['location'])) {
-    echo json_encode(["success" => false, "message" => "Missing fields"]);
+$name       = trim($data['name'] ?? '');
+$phone      = trim($data['phone'] ?? '');
+$email      = trim($data['email'] ?? '');
+$password   = $data['password'] ?? '';
+$shopName   = trim($data['shopName'] ?? '');
+$categoryId = (int)($data['categoryId'] ?? 1);
+$location   = trim($data['location'] ?? '');
+
+if (empty($name) || empty($phone) || empty($password) || empty($shopName) || empty($location)) {
+    echo json_encode(["success" => false, "message" => "Name, Phone, Password, Business Name, and Location cannot be empty"]);
     exit;
 }
 
-$name       = trim($data['name']);
-$phone      = trim($data['phone']);
-$email      = trim($data['email']);
-$password   = $data['password'];
-$shopName   = trim($data['shopName']);
-$categoryId = (int)$data['categoryId'];
-$location   = trim($data['location']);
-
-if (empty($name) || empty($phone) || empty($email) || empty($password) || empty($shopName) || $categoryId <= 0 || empty($location)) {
-    echo json_encode(["success" => false, "message" => "Fields cannot be empty"]);
-    exit;
+if (empty($email)) {
+    $email = $phone . '@provider.smartq.local';
 }
 
 // -------------------------------------------------------
