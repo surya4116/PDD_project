@@ -10,14 +10,16 @@ if ($id <= 0) {
 }
 
 try {
-    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
-    $stmt->execute([$id]);
+    $stmt1 = $pdo->prepare("DELETE FROM users WHERE id = ?");
+    $stmt1->execute([$id]);
     
-    if ($stmt->rowCount() > 0) {
-        echo json_encode(["success" => true, "message" => "User deleted successfully"]);
-    } else {
-        echo json_encode(["success" => false, "message" => "User not found or already deleted"]);
-    }
+    $stmt2 = $pdo->prepare("DELETE FROM providers WHERE provider_id = ? OR id = ?");
+    $stmt2->execute([$id, $id]);
+
+    $stmt3 = $pdo->prepare("DELETE FROM service_centers WHERE providerId = ? OR adminId = ?");
+    $stmt3->execute([$id, $id]);
+    
+    echo json_encode(["success" => true, "message" => "User/Provider and associated centers deleted successfully"]);
 } catch (Exception $e) {
     echo json_encode(["success" => false, "message" => "Server error: " . $e->getMessage()]);
 }
