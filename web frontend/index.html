@@ -218,7 +218,7 @@
       if (selectedRole === 'provider') {
         const shopName = document.getElementById('regShopName').value.trim();
         const location = document.getElementById('regLocation').value.trim();
-        res = await api.request('/auth/register_provider.php','POST',{ name, phone, password, shopName, location, categoryId:1 });
+        res = await api.request('/auth/register_provider.php','POST',{ name, phone, email, password, shopName, location, categoryId:1 });
       } else {
         res = await api.register(name, phone, email, password);
       }
