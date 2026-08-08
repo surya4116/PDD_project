@@ -101,6 +101,13 @@ fun SlotAndTokenManagementScreen(
                     onClick = {
                         val slots = numSlots.toIntOrNull() ?: 8
                         val tokens = tokensPerSlot.toIntOrNull() ?: 1
+                        
+                        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+                        if (date.isNotEmpty() && date < today) {
+                            android.widget.Toast.makeText(context, "Cannot create slots for past dates", android.widget.Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
                         if (calculatedDuration > 0 && tokens > 0 && date.isNotEmpty() && startTime.isNotEmpty() && endTime.isNotEmpty()) {
                             viewModel.addSlotsBatch(
                                 serviceId = serviceId,
