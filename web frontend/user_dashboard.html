@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartQ – User Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sb-logo">
+        <div class="lm">Q</div>
+        <span>SmartQ</span>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="sb-user-name" id="sbName">–</div>
+      <div class="sb-user-role">Customer Account</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <button class="nav-link active" onclick="goTo('sec-home',this)"><span class="nl-icon">🏠</span> Dashboard</button>
+      <button class="nav-link" onclick="goTo('sec-book',this)"><span class="nl-icon">📅</span> Book a Slot</button>
+      <button class="nav-link" onclick="goTo('sec-tokens',this)"><span class="nl-icon">🎫</span> My Tokens</button>
+      <button class="nav-link" onclick="goTo('sec-queue',this)"><span class="nl-icon">📡</span> Live Queue</button>
+      <div class="nav-section-label" style="margin-top:12px;">Account</div>
+      <button class="nav-link" onclick="goTo('sec-notifications',this)">
+        <span class="nl-icon">🔔</span> Notifications
+        <span class="nl-badge" id="notifBadge" style="display:none;"></span>
+      </button>
+      <button class="nav-link" onclick="goTo('sec-profile',this)"><span class="nl-icon">👤</span> My Profile</button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="sb-logout" onclick="session.logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger btn-icon" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="topbar-title" id="topTitle">Dashboard</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <span style="color:var(--text-3);">🔍</span>
+          <input type="text" id="globalSearch" placeholder="Search service centers..." oninput="onGlobalSearch()">
+        </div>
+        <div class="topbar-notif">
+          <button class="btn-icon" onclick="goTo('sec-notifications', null)">🔔</button>
+          <div class="notif-badge" id="notifDot"></div>
+        </div>
+        <button class="btn-icon" onclick="goTo('sec-profile',null)">👤</button>
+      </div>
+    </header>
+
+    <!-- ═══ PAGE CONTENT ═══ -->
+    <div class="page-content">
+
+      <!-- ── SECTION: HOME ── -->
+      <div id="sec-home" class="section active">
+        <div class="page-header">
+          <div>
+            <h1 id="welcomeMsg">Welcome back!</h1>
+            <p>Find your service center and skip the queue</p>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row stats-row-3" id="dashStats">
+          <div class="stat-card" onclick="goTo('sec-tokens',null)">
+            <div class="stat-card-header">
+              <div class="stat-icon" style="background:var(--primary-10);">🎫</div>
+            </div>
+            <div class="stat-value" id="dTotalBookings">–</div>
+            <div class="stat-label">Total Bookings</div>
+          </div>
+          <div class="stat-card" onclick="goTo('sec-queue',null)">
+            <div class="stat-card-header">
+              <div class="stat-icon" style="background:var(--success-bg);">📡</div>
+            </div>
+            <div class="stat-value" id="dActive">–</div>
+            <div class="stat-label">Active Tokens</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <div class="stat-icon" style="background:var(--info-bg);">✅</div>
+            </div>
+            <div class="stat-value" id="dCompleted">–</div>
+            <div class="stat-label">Completed</div>
+          </div>
+        </div>
+
+        <!-- Categories & Centers -->
+        <div style="display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start;">
+          <!-- Category sidebar -->
+          <div class="card card-pad">
+            <div class="card-title">Categories</div>
+            <div id="catList" style="display:flex;flex-direction:column;gap:4px;">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Centers grid -->
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <h3 style="font-size:18px;font-weight:700;">Service Centers</h3>
+              <span id="centersCount" style="font-size:13px;color:var(--text-2);"></span>
+            </div>
+            <div class="toolbar">
+              <div class="search-field">
+                <span style="color:var(--text-3);">🔍</span>
+                <input type="text" id="centerSearch" placeholder="Search by name or location..." oninput="filterCenters()">
+              </div>
+            </div>
+            <div class="card-grid" id="centersList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: BOOK A SLOT ── -->
+      <div id="sec-book" class="section">
+        <div class="page-header">
+          <div><h1>Book a Slot</h1><p>Select a service center, service, and time slot</p></div>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="steps" id="bookingSteps">
+          <div class="step active" id="step1"><div class="step-num">1</div> <span>Select Center</span></div>
+          <div class="step-line" id="line1"></div>
+          <div class="step" id="step2"><div class="step-num">2</div> <span>Select Service</span></div>
+          <div class="step-line" id="line2"></div>
+          <div class="step" id="step3"><div class="step-num">3</div> <span>Select Slot</span></div>
+          <div class="step-line" id="line3"></div>
+          <div class="step" id="step4"><div class="step-num">4</div> <span>Confirm</span></div>
+        </div>
+
+        <div class="booking-layout">
+          <!-- LEFT: Main content -->
+          <div>
+            <!-- Step 1: Pick Center -->
+            <div id="bookStep1">
+              <div class="toolbar">
+                <div class="search-field" style="flex:1;">
+                  <span style="color:var(--text-3);">🔍</span>
+                  <input type="text" id="bookSearch" placeholder="Search centers..." oninput="filterBookCenters()">
+                </div>
+              </div>
+              <div id="bookCatRow" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;"></div>
+              <div class="card-grid" id="bookCentersList"></div>
+            </div>
+
+            <!-- Step 2: Pick Service -->
+            <div id="bookStep2" style="display:none;">
+              <button class="btn btn-secondary" style="margin-bottom:20px;" onclick="backToStep(1)">← Back</button>
+              <div class="card card-pad" id="selectedCenterBanner" style="margin-bottom:20px;display:flex;gap:16px;align-items:center;">
+                <div style="width:52px;height:52px;background:var(--primary-10);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:24px;">🏪</div>
+                <div><div style="font-size:16px;font-weight:700;" id="bkCenterName"></div><div style="font-size:13px;color:var(--text-2);" id="bkCenterAddr"></div></div>
+              </div>
+              <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">Available Services</h3>
+              <div id="servicesList"></div>
+            </div>
+
+            <!-- Step 3: Pick Slot -->
+            <div id="bookStep3" style="display:none;">
+              <button class="btn btn-secondary" style="margin-bottom:20px;" onclick="backToStep(2)">← Back</button>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                <div style="font-size:15px;font-weight:700;">Select Date:</div>
+                <div id="dateChips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:700;">Available Time Slots</h3>
+                <span id="slotsCount" style="font-size:13px;color:var(--text-2);"></span>
+              </div>
+              <div class="slot-grid" id="slotsGrid"></div>
+            </div>
+
+            <!-- Step 4: Confirm -->
+            <div id="bookStep4" style="display:none;">
+              <button class="btn btn-secondary" style="margin-bottom:20px;" onclick="backToStep(3)">← Back</button>
+              <div class="card card-pad">
+                <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;">Confirm Your Booking</h3>
+                <div style="display:grid;gap:16px;margin-bottom:24px;">
+                  <div style="display:flex;gap:16px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);">
+                    <span style="font-size:20px;">🏪</span>
+                    <div><div style="font-size:12px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Service Center</div><div style="font-size:15px;font-weight:700;margin-top:2px;" id="confirmCenter"></div></div>
+                  </div>
+                  <div style="display:flex;gap:16px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);">
+                    <span style="font-size:20px;">⚙️</span>
+                    <div><div style="font-size:12px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Service</div><div style="font-size:15px;font-weight:700;margin-top:2px;" id="confirmService"></div></div>
+                  </div>
+                  <div style="display:flex;gap:16px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);">
+                    <span style="font-size:20px;">🕐</span>
+                    <div><div style="font-size:12px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Time Slot</div><div style="font-size:15px;font-weight:700;margin-top:2px;" id="confirmSlot"></div></div>
+                  </div>
+                  <div style="display:flex;gap:16px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);">
+                    <span style="font-size:20px;">⏱</span>
+                    <div><div style="font-size:12px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Est. Wait</div><div style="font-size:15px;font-weight:700;margin-top:2px;">~15 minutes</div></div>
+                  </div>
+                </div>
+                <div id="confirmAlert" class="alert alert-error"></div>
+                <button class="btn btn-primary" id="confirmBookBtn" onclick="submitBooking()">✅ Confirm Booking</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Booking summary sidebar -->
+          <div class="booking-sidebar-card">
+            <div class="card card-pad" id="bookSummaryCard" style="display:none;">
+              <div class="card-title">Booking Summary</div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-3);">Center</div><div style="font-size:14px;font-weight:600;margin-top:2px;" id="sumCenter">–</div></div>
+                <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-3);">Service</div><div style="font-size:14px;font-weight:600;margin-top:2px;" id="sumService">–</div></div>
+                <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-3);">Slot</div><div style="font-size:14px;font-weight:600;margin-top:2px;" id="sumSlot">–</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: MY TOKENS ── -->
+      <div id="sec-tokens" class="section">
+        <div class="page-header">
+          <div><h1>My Tokens</h1><p>View and manage all your queue tokens</p></div>
+        </div>
+        <div class="toolbar">
+          <div class="filter-pill active" onclick="filterTokens('All',this)">All</div>
+          <div class="filter-pill" onclick="filterTokens('Waiting',this)">Waiting</div>
+          <div class="filter-pill" onclick="filterTokens('Running',this)">Running</div>
+          <div class="filter-pill" onclick="filterTokens('Completed',this)">Completed</div>
+          <div class="filter-pill" onclick="filterTokens('Cancelled',this)">Cancelled</div>
+        </div>
+        <div class="token-grid" id="tokensList">
+          <div class="spin-wrap"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: LIVE QUEUE ── -->
+      <div id="sec-queue" class="section">
+        <div class="page-header">
+          <div><h1>Live Queue Tracking</h1><p>Real-time position and wait time for your active tokens</p></div>
+          <div class="page-header-actions">
+            <button class="btn btn-secondary" onclick="loadQueueSection()">🔄 Refresh</button>
+          </div>
+        </div>
+        <div id="queueContent"><div class="spin-wrap"><div class="spinner"></div></div></div>
+      </div>
+
+      <!-- ── SECTION: NOTIFICATIONS ── -->
+      <div id="sec-notifications" class="section">
+        <div class="page-header"><div><h1>Notifications</h1><p>Stay updated on your bookings</p></div></div>
+        <div class="card card-pad">
+          <div id="notifContent"><div class="spin-wrap"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: MY PROFILE ── -->
+      <div id="sec-profile" class="section">
+        <div class="page-header"><div><h1>My Profile</h1><p>Manage your personal information</p></div></div>
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <div class="avatar-circle">👤</div>
+            <div class="avatar-name" id="profDisplayName">–</div>
+            <div class="avatar-role" id="profDisplayPhone">–</div>
+            <div style="margin-top:24px;font-size:13px;color:rgba(255,255,255,0.7);">Customer Account</div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">Edit Profile</div>
+            <div id="profileAlert" class="alert"></div>
+            <form onsubmit="saveProfile(event)">
+              <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="editName" class="form-input" required></div>
+              <div class="form-group"><label class="form-label">Phone Number <span style="color:var(--text-3);font-size:12px;">(cannot change)</span></label><input type="text" id="editPhone" class="form-input" disabled></div>
+              <div class="form-group"><label class="form-label">Email Address</label><input type="email" id="editEmail" class="form-input"></div>
+              <div style="display:flex;gap:12px;margin-top:8px;">
+                <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes</button>
+                <button type="button" class="btn btn-danger" style="flex:1;" onclick="session.logout()">🚪 Logout</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Booking Success Modal -->
+<div id="successModal" class="modal-bg hidden">
+  <div class="modal-box" style="text-align:center;padding:48px 32px;">
+    <div style="font-size:64px;margin-bottom:16px;">🎉</div>
+    <h2 style="font-size:26px;font-weight:800;margin-bottom:8px;">Booking Confirmed!</h2>
+    <p style="color:var(--text-2);margin-bottom:28px;">Your queue token has been generated</p>
+    <div class="card card-pad" style="background:var(--primary-5);border-color:var(--primary-20);margin-bottom:28px;">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);">Your Token Number</div>
+      <div style="font-size:56px;font-weight:900;color:var(--primary);line-height:1.2;margin:8px 0;" id="successToken">–</div>
+      <div style="font-size:14px;color:var(--text-2);" id="successCenter"></div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('successModal')">Close</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="closeModal('successModal');goTo('sec-tokens',null);">View My Tokens</button>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="modal-bg hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div><h2>Rate Your Experience</h2><p id="reviewCenterName" style="color:var(--text-2);font-size:14px;margin-top:4px;"></p></div>
+      <button class="btn-icon" onclick="closeModal('reviewModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:12px;">Tap a star to rate</div>
+        <div class="stars-row" id="reviewStars"></div>
+        <div style="font-size:14px;font-weight:700;color:var(--primary);margin-top:8px;min-height:22px;" id="ratingLabel"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Feedback (optional)</label>
+        <textarea id="reviewComment" class="form-input" rows="4" style="resize:none;" placeholder="Share your experience..."></textarea>
+      </div>
+      <div id="reviewAlert" class="alert alert-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('reviewModal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="submitReview()">⭐ Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+const user = session.getUser();
+if (!user) window.location.href = 'index.html';
+
+// State
+let allCenters=[], allCats=[], selectedCatId=null, allTokens=[], tokenFilter='All';
+let bkCenterId=null, bkCenterName='', bkCenterAddr='';
+let bkServiceId=null, bkServiceName='';
+let bkSlotId=null, bkSlotTime='', bkSlotDate='';
+let cachedSlots=[], selectedDateFilter=null;
+let reviewCenterId=null, reviewBookingId=null, currentRating=0;
+
+let currentTrackingBookingId = null;
+
+// ── Init
+document.getElementById('sbName').textContent = user.name;
+document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.name}!`;
+document.getElementById('editName').value = user.name||'';
+document.getElementById('editEmail').value = user.email||'';
+document.getElementById('editPhone').value = user.phone||'';
+document.getElementById('profDisplayName').textContent = user.name;
+document.getElementById('profDisplayPhone').textContent = user.phone;
+
+loadHome();
+checkNotifBadge();
+
+// ── Live Real-Time Auto Sync (Polling every 3 seconds)
+setInterval(() => {
+  if (document.hidden) return;
+  const activeSec = document.querySelector('.section.active')?.id;
+  if (activeSec === 'sec-home') {
+    loadHome(true);
+  } else if (activeSec === 'sec-tokens') {
+    loadTokens(true);
+  } else if (activeSec === 'sec-queue') {
+    if (currentTrackingBookingId) {
+      loadQueueDetail(currentTrackingBookingId, true);
+    } else {
+      loadQueueSection(true);
+    }
+  }
+  checkNotifBadge();
+}, 3000);
+
+// ── Sidebar nav
+function goTo(secId, navBtn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(secId).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  if (navBtn) navBtn.classList.add('active');
+  const titles = {'sec-home':'Dashboard','sec-book':'Book a Slot','sec-tokens':'My Tokens','sec-queue':'Live Queue','sec-notifications':'Notifications','sec-profile':'My Profile'};
+  document.getElementById('topTitle').textContent = titles[secId] || '';
+  closeSidebar();
+  if (secId==='sec-tokens') loadTokens();
+  if (secId==='sec-queue') loadQueueSection();
+  if (secId==='sec-notifications') loadNotifications();
+  if (secId==='sec-book') initBookSection();
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+
+// ── Home
+async function loadHome(silent = false) {
+  try {
+    const [catRes, cenRes, bkRes] = await Promise.all([api.getCategories(), api.getCenters(), api.getBookings(user.id)]);
+    if (catRes.success) { allCats = catRes.categories; if(!silent) renderCatList(); }
+    if (cenRes.success) { allCenters = cenRes.centers.filter(c=>c.isActive); if(!silent) renderCenters(allCenters); }
+    if (bkRes.success && bkRes.bookings) {
+      const bks = bkRes.bookings;
+      document.getElementById('dTotalBookings').textContent = bks.length;
+      document.getElementById('dActive').textContent = bks.filter(b=>['Waiting','In Premise','Called','Running'].includes(b.booking.status)).length;
+      document.getElementById('dCompleted').textContent = bks.filter(b=>b.booking.status==='Completed').length;
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderCatList() {
+  const catIcons = {'LocalHospital':'🏥','AccountBalance':'🏦','ContentCut':'✂️','MedicalServices':'💊'};
+  const el = document.getElementById('catList');
+  el.innerHTML = `<button class="nav-link ${!selectedCatId?'active':''}" onclick="selectCat(null,this)" style="justify-content:space-between;padding:8px 10px;">
+    <div style="display:flex;align-items:center;gap:8px;"><span>📋</span> All</div>
+    <span style="font-size:12px;color:var(--text-3);">${allCenters.length}</span>
+  </button>` + allCats.map(c => {
+    const cnt = allCenters.filter(ce=>ce.categoryId==c.id).length;
+    return `<button class="nav-link ${selectedCatId==c.id?'active':''}" onclick="selectCat(${c.id},this)" style="justify-content:space-between;padding:8px 10px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span>${catIcons[c.iconName]||'📂'}</span> ${c.name}</div>
+      <span style="font-size:12px;color:var(--text-3);">${cnt}</span>
+    </button>`;
+  }).join('');
+}
+
+function selectCat(id, el) {
+  selectedCatId = id;
+  document.querySelectorAll('#catList .nav-link').forEach(l=>l.classList.remove('active'));
+  el.classList.add('active');
+  filterCenters();
+  renderCatList();
+}
+
+function filterCenters() {
+  const q = (document.getElementById('centerSearch')?.value||'').toLowerCase();
+  let filtered = allCenters;
+  if (selectedCatId) filtered = filtered.filter(c=>c.categoryId==selectedCatId);
+  if (q) filtered = filtered.filter(c=>c.name.toLowerCase().includes(q)||(c.address||'').toLowerCase().includes(q));
+  renderCenters(filtered);
+}
+
+function onGlobalSearch() {
+  document.getElementById('centerSearch').value = document.getElementById('globalSearch').value;
+  filterCenters();
+}
+
+function renderCenters(centers) {
+  const catIcons = {'LocalHospital':'🏥','AccountBalance':'🏦','ContentCut':'✂️','MedicalServices':'💊'};
+  document.getElementById('centersCount').textContent = `${centers.length} centers found`;
+  const el = document.getElementById('centersList');
+  if (!centers.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><p>No centers found</p></div>'; return; }
+  el.innerHTML = centers.map(c => {
+    const cat = allCats.find(ca=>ca.id==c.categoryId);
+    const icon = catIcons[cat?.iconName]||'🏪';
+    return `<div class="item-card" onclick="startBooking(${c.id},'${esc(c.name)}','${esc(c.address)}')">
+      <div class="item-card-icon">${icon}</div>
+      <div class="item-card-body">
+        <div class="item-card-title">${c.name}</div>
+        <div class="item-card-sub">${cat?.name||'Service'}</div>
+        <div class="item-card-sub" style="margin-top:2px;">📍 ${c.address}</div>
+        <div class="item-card-meta">
+          <span class="badge badge-primary">Book Now →</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Book a Slot
+async function initBookSection() {
+  document.getElementById('bookSearch').value = '';
+  if (allCenters.length === 0) { const res = await api.getCenters(); if(res.success) allCenters = res.centers.filter(c=>c.isActive); }
+  if (allCats.length === 0) { const res = await api.getCategories(); if(res.success) allCats = res.categories; }
+  renderBookCats();
+  renderBookCenters(allCenters);
+  showStep(1);
+}
+
+function renderBookCats() {
+  const catIcons = {'LocalHospital':'🏥','AccountBalance':'🏦','ContentCut':'✂️','MedicalServices':'💊'};
+  document.getElementById('bookCatRow').innerHTML =
+    `<span class="filter-pill ${!selectedCatId?'active':''}" onclick="bookFilterCat(null,this)">All</span>` +
+    allCats.map(c => `<span class="filter-pill ${selectedCatId==c.id?'active':''}" onclick="bookFilterCat(${c.id},this)">${catIcons[c.iconName]||'📂'} ${c.name}</span>`).join('');
+}
+
+function bookFilterCat(id, el) {
+  selectedCatId = id;
+  document.querySelectorAll('#bookCatRow .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  filterBookCenters();
+}
+
+function filterBookCenters() {
+  const q = document.getElementById('bookSearch').value.toLowerCase();
+  let filtered = allCenters;
+  if (selectedCatId) filtered = filtered.filter(c=>c.categoryId==selectedCatId);
+  if (q) filtered = filtered.filter(c=>c.name.toLowerCase().includes(q)||(c.address||'').toLowerCase().includes(q));
+  renderBookCenters(filtered);
+}
+
+function renderBookCenters(centers) {
+  const catIcons = {'LocalHospital':'🏥','AccountBalance':'🏦','ContentCut':'✂️','MedicalServices':'💊'};
+  const el = document.getElementById('bookCentersList');
+  if (!centers.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><p>No centers found</p></div>'; return; }
+  el.innerHTML = centers.map(c => {
+    const cat = allCats.find(ca=>ca.id==c.categoryId);
+    const icon = catIcons[cat?.iconName]||'🏪';
+    return `<div class="item-card" onclick="startBooking(${c.id},'${esc(c.name)}','${esc(c.address)}')">
+      <div class="item-card-icon">${icon}</div>
+      <div class="item-card-body">
+        <div class="item-card-title">${c.name}</div>
+        <div class="item-card-sub">📍 ${c.address}</div>
+        <div class="item-card-meta"><span class="badge badge-primary">Select →</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function startBooking(centerId, centerName, centerAddr) {
+  bkCenterId=centerId; bkCenterName=centerName; bkCenterAddr=centerAddr;
+  bkServiceId=null; bkSlotId=null;
+  document.getElementById('bkCenterName').textContent = centerName;
+  document.getElementById('bkCenterAddr').textContent = centerAddr;
+  updateSummary();
+  loadServices(centerId);
+  goTo('sec-book', null);
+  showStep(2);
+}
+
+async function loadServices(centerId) {
+  document.getElementById('servicesList').innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const res = await api.getServices(centerId);
+    if (res.success && res.services.length > 0) {
+      document.getElementById('servicesList').innerHTML = `<div class="card-grid">${res.services.map(s=>`
+        <div class="item-card" onclick="selectService(${s.service_id||s.id},'${esc(s.name)}')">
+          <div class="item-card-icon">⚙️</div>
+          <div class="item-card-body">
+            <div class="item-card-title">${s.name}</div>
+            <div class="item-card-sub">${s.duration||'Service'}</div>
+          </div>
+        </div>`).join('')}</div>`;
+    } else {
+      document.getElementById('servicesList').innerHTML = '<div class="empty"><div class="empty-icon">⚙️</div><p>No services available</p></div>';
+    }
+  } catch(e) {}
+}
+
+async function selectService(serviceId, serviceName) {
+  bkServiceId=serviceId; bkServiceName=serviceName;
+  updateSummary();
+  showStep(3);
+  document.getElementById('slotsGrid').innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const res = await api.getSlots(serviceId);
+    if (res.success && res.slots.length > 0) {
+      cachedSlots = res.slots;
+      const today = new Date().toISOString().split('T')[0];
+      const dates = [...new Set(res.slots.map(s=>s.date))].sort();
+      selectedDateFilter = dates.includes(today) ? today : dates[0];
+      renderDateChips(dates, today);
+      renderSlots();
+    } else {
+      document.getElementById('slotsGrid').innerHTML = '<div class="empty"><div class="empty-icon">🕐</div><p>No slots available</p></div>';
+    }
+  } catch(e) {}
+}
+
+function renderDateChips(dates, today) {
+  document.getElementById('dateChips').innerHTML = dates.map(d => {
+    const label = d===today ? `Today (${d})` : d;
+    return `<span class="filter-pill ${selectedDateFilter===d?'active':''}" onclick="pickDate('${d}',this)">📅 ${label}</span>`;
+  }).join('');
+}
+
+function pickDate(d, el) {
+  selectedDateFilter=d;
+  document.querySelectorAll('#dateChips .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  bkSlotId=null; updateSummary();
+  renderSlots();
+}
+
+function renderSlots() {
+  const filtered = selectedDateFilter ? cachedSlots.filter(s=>s.date===selectedDateFilter) : cachedSlots;
+  document.getElementById('slotsCount').textContent = `${filtered.length} slots available`;
+  if (!filtered.length) { document.getElementById('slotsGrid').innerHTML = '<div class="empty"><div class="empty-icon">🕐</div><p>No slots for this date</p></div>'; return; }
+  document.getElementById('slotsGrid').innerHTML = filtered.map(s=>{
+    const isFull = s.currentTokens>=s.maxTokens;
+    const isSel = s.id==bkSlotId;
+    const isRun = s.status==='Running';
+    let cls = 'slot-chip';
+    if(isSel) cls+=' sel'; else if(isRun&&!isFull) cls+=' active-now'; else if(isFull||s.status==='Completed') cls+=' full';
+    const canBook = !isFull && s.status!=='Completed' && s.status!=='Cancelled';
+    const badge = (isRun&&!isFull) ? '<div class="sc-badge">🟢 Active Now</div>' : '';
+    const countTxt = isFull?'Fully Booked':s.status==='Completed'?'Time Passed':`${s.currentTokens}/${s.maxTokens} Booked`;
+    return `<div class="${cls}" onclick="${canBook?`pickSlot(${s.id},'${s.startTime} - ${s.endTime}','${s.date}')`:''}" style="pointer-events:${canBook?'auto':'none'};">
+      ${badge}
+      <div class="sc-time">⏱ ${s.startTime} – ${s.endTime}</div>
+      <div class="sc-count">${countTxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function pickSlot(id, time, date) {
+  bkSlotId=id; bkSlotTime=time; bkSlotDate=date;
+  renderSlots();
+  updateSummary();
+  setTimeout(()=>{ showStep(4); fillConfirm(); }, 300);
+}
+
+function fillConfirm() {
+  document.getElementById('confirmCenter').textContent = bkCenterName;
+  document.getElementById('confirmService').textContent = bkServiceName;
+  document.getElementById('confirmSlot').textContent = `${bkSlotDate} · ${bkSlotTime}`;
+}
+
+async function submitBooking() {
+  const btn = document.getElementById('confirmBookBtn');
+  const alertEl = document.getElementById('confirmAlert');
+  alertEl.classList.remove('show');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div> Processing...';
+  btn.disabled=true;
+  try {
+    const res = await api.createBooking(user.id, bkSlotId, bkCenterId);
+    if (res.success) {
+      document.getElementById('successToken').textContent = res.booking?.token_number||res.token||'–';
+      document.getElementById('successCenter').textContent = bkCenterName;
+      document.getElementById('successModal').classList.remove('hidden');
+      showStep(1);
+    } else {
+      alertEl.textContent = res.message||'Booking failed'; alertEl.className='alert alert-error show';
+    }
+  } catch(e) { alertEl.textContent='Network error'; alertEl.className='alert alert-error show'; }
+  finally { btn.textContent='✅ Confirm Booking'; btn.disabled=false; }
+}
+
+function updateSummary() {
+  const card = document.getElementById('bookSummaryCard');
+  if (bkCenterId||bkServiceId||bkSlotId) { card.style.display='block'; } else { card.style.display='none'; return; }
+  document.getElementById('sumCenter').textContent = bkCenterName||'–';
+  document.getElementById('sumService').textContent = bkServiceName||'Not selected';
+  document.getElementById('sumSlot').textContent = bkSlotTime ? `${bkSlotDate} · ${bkSlotTime}` : 'Not selected';
+}
+
+function showStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById(`bookStep${i}`).style.display = i===n?'block':'none';
+    const st = document.getElementById(`step${i}`);
+    st.classList.remove('active','done');
+    if(i<n) st.classList.add('done');
+    else if(i===n) st.classList.add('active');
+    if(i<4) { const ln=document.getElementById(`line${i}`); ln.classList.toggle('done',i<n); }
+  });
+}
+
+function backToStep(n) { showStep(n); }
+
+// ── Tokens
+async function loadTokens(silent = false) {
+  if (!silent) document.getElementById('tokensList').innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const res = await api.getBookings(user.id);
+    if(res.success) { allTokens = res.bookings||[]; renderTokens(); }
+  } catch(e) {}
+}
+
+function filterTokens(f, el) {
+  tokenFilter=f;
+  document.querySelectorAll('#sec-tokens .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderTokens();
+}
+
+function renderTokens() {
+  const filtered = tokenFilter==='All' ? allTokens : allTokens.filter(b=>b.booking.status===tokenFilter);
+  const el = document.getElementById('tokensList');
+  if(!filtered.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎫</div><p>No tokens found</p></div>'; return; }
+  const cols = {Waiting:'badge-waiting',Running:'badge-running','In Premise':'badge-primary',Called:'badge-primary',Completed:'badge-completed',Cancelled:'badge-cancelled',Rejected:'badge-cancelled'};
+  el.innerHTML = `<div class="token-grid">${filtered.map(b=>{
+    const bc = cols[b.booking.status]||'badge-primary';
+    const canCancel = ['Waiting','In Premise','Called','Running'].includes(b.booking.status);
+    const isDone = b.booking.status==='Completed';
+    return `<div class="token-card" onclick="openQueue(${b.booking.id})">
+      <div class="tc-header">
+        <div class="tc-token">${b.booking.tokenNumber}</div>
+        <span class="badge ${bc}">${b.booking.status}</span>
+      </div>
+      <div class="tc-center">${b.center.name}</div>
+      <div class="tc-slot">⏱ ${b.slot.startTime} – ${b.slot.endTime} · 📅 ${b.slot.date}</div>
+      <div class="tc-stats">
+        <div class="tc-stat"><div class="lbl">Queue Position</div><div class="val">${b.booking.queuePosition||'–'}</div></div>
+        <div class="tc-stat"><div class="lbl">Wait Time</div><div class="val">${b.queueToken?.estimatedWaitTimeMins??0} min</div></div>
+      </div>
+      <div class="tc-actions">
+        <button class="btn btn-secondary" style="flex:1;padding:8px;" onclick="event.stopPropagation();openQueue(${b.booking.id})">📡 Track</button>
+        ${canCancel ? `<button class="btn btn-danger" style="flex:1;padding:8px;" onclick="event.stopPropagation();cancelBooking(${b.booking.id})">✕ Cancel</button>` : ''}
+        ${isDone ? `<button class="btn" style="flex:1;padding:8px;background:var(--info-bg);color:var(--info);" onclick="event.stopPropagation();openReview(${b.booking.id},${b.center.id},'${esc(b.center.name)}')">⭐ Review</button>` : ''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function cancelBooking(id) {
+  if(!confirm('Cancel this booking?')) return;
+  const res = await api.cancelBooking(id, user.id);
+  if(res.success) loadTokens(); else alert(res.message||'Failed');
+}
+
+// ── Live Queue
+function openQueue(bookingId) {
+  currentTrackingBookingId = bookingId;
+  goTo('sec-queue', null);
+  loadQueueDetail(bookingId);
+}
+
+async function loadQueueSection(silent = false) {
+  currentTrackingBookingId = null;
+  const el = document.getElementById('queueContent');
+  if (!silent) el.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const res = await api.getBookings(user.id);
+    const active = (res.bookings||[]).filter(b=>['Waiting','In Premise','Called','Running'].includes(b.booking.status));
+    if (!active.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📡</div><p>No active tokens to track</p><div style="margin-top:16px;"><button class="btn btn-primary" style="width:auto;padding:10px 24px;" onclick="goTo('sec-book',null)">Book a Slot</button></div></div>`;
+      return;
+    }
+    el.innerHTML = `<div style="margin-bottom:20px;"><h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">Active Tokens — click to track</h3>
+    <div class="token-grid">${active.map(b=>`
+      <div class="token-card" style="cursor:pointer;" onclick="openQueue(${b.booking.id})">
+        <div class="tc-header"><div class="tc-token">${b.booking.tokenNumber}</div><span class="badge badge-${b.booking.status.toLowerCase()}">${b.booking.status}</span></div>
+        <div class="tc-center">${b.center.name}</div>
+        <div class="tc-slot">⏱ ${b.slot.startTime} – ${b.slot.endTime}</div>
+      </div>`).join('')}</div></div>`;
+  } catch(e) { el.innerHTML = '<div class="empty"><p>Failed to load.</p></div>'; }
+}
+
+async function loadQueueDetail(bookingId, silent = false) {
+  currentTrackingBookingId = bookingId;
+  const el = document.getElementById('queueContent');
+  if (!silent) el.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const res = await api.getBookings(user.id);
+    const b = (res.bookings||[]).find(bk=>bk.booking.id==bookingId);
+    if (!b) { el.innerHTML = '<div class="empty"><p>Booking not found.</p></div>'; return; }
+    const pos = b.booking.queuePosition||0;
+    const waitMins = b.queueToken?.estimatedWaitTimeMins ?? (pos*15);
+    let qList=[];
+    try { const qr = await api.getQueue(b.slot.id); if(qr.success) qList=qr.queue||[]; } catch(e){}
+    const ratio = b.slot.currentTokens/b.slot.maxTokens;
+    const cong = ratio>0.8 ? {l:'High Congestion',c:'var(--error)',bg:'var(--error-bg)'}
+               : ratio>0.5 ? {l:'Moderate Congestion',c:'var(--warning)',bg:'var(--warning-bg)'}
+               : {l:'Low Congestion',c:'var(--success)',bg:'var(--success-bg)'};
+    const isActive = ['Waiting','In Premise','Called','Running'].includes(b.booking.status);
+    el.innerHTML = `
+      <button class="btn btn-secondary" style="margin-bottom:20px;width:auto;padding:9px 18px;" onclick="loadQueueSection()">← All Active Tokens</button>
+      <!-- Header -->
+      <div class="card card-pad" style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div><div style="font-size:20px;font-weight:800;">${b.center.name}</div><div style="font-size:14px;color:var(--text-2);">📍 ${b.center.address}</div></div>
+        <button class="btn btn-secondary" style="width:auto;padding:9px 16px;" onclick="loadQueueDetail(${bookingId})">🔄 Refresh</button>
+      </div>
+      <!-- Gradient Hero -->
+      <div class="queue-hero" style="margin-bottom:24px;">
+        <div class="qh-item"><div class="qh-label">Your Position</div><div class="qh-value">${pos}</div></div>
+        <div class="qh-divider"></div>
+        <div class="qh-item"><div class="qh-label">Your Token</div><div class="qh-value">${b.booking.tokenNumber}</div></div>
+        <div class="qh-divider"></div>
+        <div class="qh-item"><div class="qh-label">Wait Time</div><div class="qh-value" style="font-size:36px;color:#FDBA74;">${waitMins}m</div></div>
+      </div>
+      <div class="queue-layout">
+        <!-- Left -->
+        <div>
+          <div class="card card-pad" style="margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div>
+                <div style="font-size:13px;color:var(--text-2);">Status</div>
+                <div style="font-size:22px;font-weight:800;margin-top:4px;">${b.booking.status}</div>
+              </div>
+              <div>
+                <div style="font-size:13px;color:var(--text-2);">AI Allocated Counter</div>
+                <div style="font-size:18px;font-weight:700;margin-top:4px;">Counter A</div>
+              </div>
+              <span class="badge" style="background:${cong.bg};color:${cong.c};padding:8px 14px;">${cong.l}</span>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title">Queue Progress</div>
+            <div>
+              ${pos>1?`<div class="notif-item"><div class="notif-dot-wrap"><div class="ndot" style="background:var(--warning);"></div></div><div class="notif-content"><div class="notif-title">...</div><div class="notif-msg" style="color:var(--warning);">Serving Now</div></div></div>`:''}
+              <div class="notif-item"><div class="notif-dot-wrap"><div class="ndot unread"></div></div><div class="notif-content"><div class="notif-title" style="color:var(--primary);">${b.booking.tokenNumber} (You)</div><div class="notif-msg">${pos<=1?'Serving Now':`Waiting — Position ${pos}`}</div></div></div>
+              ${qList.filter(q=>q.tokenNumber!==b.booking.tokenNumber&&q.status==='Waiting').slice(0,3).map(q=>`<div class="notif-item"><div class="notif-dot-wrap"><div class="ndot"></div></div><div class="notif-content"><div class="notif-title">${q.tokenNumber}</div><div class="notif-msg">Waiting</div></div></div>`).join('')}
+            </div>
+          </div>
+        </div>
+        <!-- Right -->
+        <div>
+          ${isActive?`<div class="card card-pad" style="margin-bottom:20px;"><div class="card-title">Actions</div>
+            <button class="btn btn-danger" onclick="cancelBooking(${bookingId});loadQueueSection();">✕ Cancel Booking</button></div>`:''}
+          ${b.booking.status==='Completed'?`<div class="card card-pad"><div class="card-title">Rate Your Experience</div><button class="btn btn-primary" onclick="openReview(${bookingId},${b.center.id},'${esc(b.center.name)}')">⭐ Write a Review</button></div>`:''}
+        </div>
+      </div>`;
+  } catch(e) { el.innerHTML='<div class="empty"><p>Failed to load queue data.</p></div>'; }
+}
+
+// ── Notifications
+async function checkNotifBadge() {
+  try {
+    const res = await api.getNotifications(user.id);
+    if(res.success) {
+      const n = res.notifications.filter(n=>parseInt(n.is_read)===0).length;
+      const dot = document.getElementById('notifDot');
+      const badge = document.getElementById('notifBadge');
+      if(n>0) { dot.style.display='flex'; dot.textContent=n; badge.style.display='flex'; badge.textContent=n; }
+      else { dot.style.display='none'; badge.style.display='none'; }
+    }
+  } catch(e) {}
+}
+
+async function loadNotifications() {
+  const el = document.getElementById('notifContent');
+  el.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const res = await api.getNotifications(user.id);
+    if(res.success && res.notifications.length>0) {
+      el.innerHTML = res.notifications.map(n=>`
+        <div class="notif-item">
+          <div class="notif-dot-wrap"><div class="ndot ${parseInt(n.is_read)===0?'unread':''}"></div></div>
+          <div class="notif-content">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-msg">${n.message}</div>
+            <div class="notif-time">${new Date(n.created_at).toLocaleString()}</div>
+          </div>
+          ${parseInt(n.is_read)===0?`<button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="markRead(${n.notification_id})">Mark Read</button>`:''}
+        </div>`).join('');
+      checkNotifBadge();
+    } else {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🔔</div><p>No notifications yet</p></div>';
+    }
+  } catch(e) {}
+}
+
+async function markRead(id) { await api.markNotificationRead(id); loadNotifications(); }
+
+// ── Profile
+async function saveProfile(e) {
+  e.preventDefault();
+  const alertEl = document.getElementById('profileAlert');
+  const name=document.getElementById('editName').value.trim();
+  const email=document.getElementById('editEmail').value.trim();
+  try {
+    const res = await api.updateProfile({ user_id:user.id, fullname:name, email });
+    if(res.success) {
+      user.name=name; user.email=email; session.setUser(user);
+      document.getElementById('sbName').textContent=name;
+      document.getElementById('profDisplayName').textContent=name;
+      document.getElementById('welcomeMsg').textContent=`Welcome back, ${name}!`;
+      alertEl.textContent='Profile updated!'; alertEl.className='alert alert-success show';
+    } else { alertEl.textContent=res.message||'Failed'; alertEl.className='alert alert-error show'; }
+  } catch(e) { alertEl.textContent='Network error'; alertEl.className='alert alert-error show'; }
+}
+
+// ── Review
+function openReview(bId, cId, cName) {
+  reviewBookingId=bId; reviewCenterId=cId; currentRating=0;
+  document.getElementById('reviewCenterName').textContent=cName;
+  document.getElementById('reviewComment').value='';
+  document.getElementById('ratingLabel').textContent='';
+  buildStars(0);
+  document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+function buildStars(r) {
+  const labels=['','Poor 😞','Fair 😐','Good 🙂','Very Good 😊','Excellent! 🌟'];
+  document.getElementById('reviewStars').innerHTML=[1,2,3,4,5].map(i=>`<span class="star ${i<=r?'lit':''}" onclick="setRating(${i})">⭐</span>`).join('');
+  document.getElementById('ratingLabel').textContent=r>0?labels[r]:'';
+}
+function setRating(r) { currentRating=r; buildStars(r); }
+async function submitReview() {
+  if(!currentRating) return;
+  const comment=document.getElementById('reviewComment').value;
+  try {
+    await api.addFeedback(reviewCenterId, user.id, currentRating, comment);
+    closeModal('reviewModal'); alert('Thank you for your feedback!');
+  } catch(e) { alert('Failed to submit'); }
+}
+
+// ── Helpers
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function esc(s){ return (s||'').replace(/'/g,"\\'"); }
+</script>
+</body>
+</html>
